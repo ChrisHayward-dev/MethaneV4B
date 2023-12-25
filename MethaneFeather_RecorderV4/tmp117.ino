@@ -25,6 +25,7 @@ void tmp117_setup() {
     delay(250);
   }
   tmp117.setMeasurementMode(TMP117_MODE_ONE_SHOT);
+  tmp117_getTemp();
 }
 void tmp117_printStatus() {
   Serial.print("Temperature averaged from ");

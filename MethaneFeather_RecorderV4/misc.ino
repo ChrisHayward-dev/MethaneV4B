@@ -9,6 +9,66 @@
    I2Cscanner - report devices on I2C bus
 */
 
+// Optional moisture sensor
+Adafruit_seesaw ss;
+bool  haveMoisture = false;
+bool moisture_setup() {
+  Serial.println("Setting up moisture sensor");
+  gps_standby();
+  if(!ss.begin(0x36)) {
+    gps_shutdown();
+    Serial.println(" -- no moisture sensor found");
+    return(haveMoisture=false);
+  }
+  Serial.println("Found moisture sensor");
+  Serial.println(ss.getVersion(),HEX);
+  float tempC = ss.getTemp();
+  uint16_t capread = ss.touchRead(0);
+  Serial.print("Temperature: ");Serial.println(tempC);
+  Serial.print(" Capactivie: ");Serial.println(capread);
+  gps_shutdown();
+  return(haveMoisture=true);
+}
+
+uint16_t moisture_get() {
+  if(!haveMoisture) return(0);
+   gps_standby();
+   if(!ss.begin(0x36)) {
+    gps_shutdown();
+    Serial.println("Unable to reinit moisture sensor");
+    return(0);
+   }
+  uint16_t capread = ss.touchRead(0);
+  gps_shutdown();
+  return(capread);
+}
+// low power
+void zpmSetup() {
+  zpmCPUClk48M();
+  zpmRTCInit();
+}
+void zpmSleepFor(uint32_t sleep_ms){
+  uint32_t now = zpmRTCGetClock();
+  pcolor(0,0,0);
+  delay(5);
+  // Serial.end();
+  // USBDevice.detach();
+  // zpmPortDisableUSB();
+  // zpmPortDisableDigital();
+  // zpmPortDisableSPI();
+  // USB->DEVICE.CTRLA.bit.SWRST = 1;
+  // while (USB->DEVICE.SYNCBUSY.bit.SWRST | USB->DEVICE.CTRLA.bit.SWRST == 1);
+  zpmRTCInterruptAt(now+sleep_ms,NULL);
+  //zpmCPUClk8M();
+  //zpmSleep();
+  //zpmCPUClk48M();
+  //  USB->DEVICE.CTRLA.bit.SWRST = 1;
+  // while (USB->DEVICE.SYNCBUSY.bit.SWRST | USB->DEVICE.CTRLA.bit.SWRST == 1);
+  // USBDevice.attach();
+  // Serial.begin(9600);     //restore USB serial
+  delay(1);
+}
+
 //pcf8575
 void pcf8575_setup() {
    Serial.println("Setting up PCF8575");
@@ -16,12 +76,23 @@ void pcf8575_setup() {
     Serial.println("PCF8575 is not answering");
     ERROR_HALT;
   }
+ 
   pcf8575_setidle();
+}
+void pcf8575_ledtest() {
+  pcf8575_setidle();
+  uint8_t ledpins[]={3,4,5,11,12,13,14,15,0};
+  for(int k=0;ledpins[k]>0;k++) {
+    pcf.digitalWrite(ledpins[k],false);
+    delay(500);
+    pcf.digitalWrite(ledpins[k],true);
+  }
 }
 void pcf8575_setidle() {
   pcf.digitalWriteWord(0xF8FA);
   pcolor(0,0,16);
 }
+
 void checkBattery() {
   uint16_t  batValue;
   uint16_t  minValue = 4096;

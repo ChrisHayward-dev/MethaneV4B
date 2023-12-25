@@ -7,6 +7,10 @@
 // modified from adafruit msc_sdfat.ino
 //  see original for license/headers
 //=================================================
+#ifndef USE_TINYUSB
+#warning TinyUSB needed to have usb drive capability
+#endif
+
 #ifdef USE_TINYUSB
 #include  <SPI.h>
 #include  <SdFat.h>

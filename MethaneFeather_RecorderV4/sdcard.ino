@@ -1,24 +1,8 @@
 // sd card routines
-#define SD_FAT_TYPE  3
-#if SD_FAT_TYPE == 0
-SdFat SD;
-File dir;
-File file;
-#elif SD_FAT_TYPE == 1
-SdFat32 SD;
-File32 dir;
-File32 file;
-#elif SD_FAT_TYPE == 2
-SdExFat SD;
-ExFile dir;
-ExFile file;
-#elif SD_FAT_TYPE == 3
+
 SdFs SD;
 FsFile dir;
 FsFile file;
-#else  // SD_FAT_TYPE
-#error invalid SD_FAT_TYPE
-#endif  // SD_FAT_TYPE
 
 void dateTime(uint16_t* date, uint16_t* time) {
   DateTime now = rtcc.now();
@@ -62,7 +46,7 @@ void sd_setup() {
 }
 void sd_printHeader(Stream *df){
   df->print("MethaneV4 output file started on ");
-  df->println(DateTime(rtc.getYear(), rtc.getMonth(), rtc.getDay(), rtc.getHours(), rtc.getMinutes(), rtc.getSeconds()).timestamp());
+  df->println(rtcc.now().timestamp());
   gps_printLoc(df);
   df->flush();
 }

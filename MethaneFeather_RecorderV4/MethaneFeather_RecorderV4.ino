@@ -2,9 +2,10 @@
 #include  <SPI.h>
 #include  <RTClib.h>
 #include  <SdFat.h>
-#include  <RTCZero.h>
 #include  <Adafruit_PCF8575.h>
 #include  <Adafruit_NeoPixel.h>
+#include <ZeroPowerManager.h>     // RTC control and wakeup
+#include  <Adafruit_seesaw.h>     // moisture sensor
 /*  Sample program to demonstrate MethaneV4 board under C
  *   
  */
@@ -45,7 +46,6 @@
 
 Adafruit_NeoPixel pixels(1, PIN_NEOPIXEL);
 Adafruit_PCF8575  pcf;
-RTCZero           rtc;
 
 /* If the battery is not detected, then the battery
  *  monitor line will have a ~1 second square wave
@@ -60,7 +60,7 @@ void setup(void) {
   
   // setup neopixel
   pixels.begin();     // init neopixel on device
-
+  pixels.clear();
   Serial.begin(9600); // Wait for console connection
   // while ((!Serial) && ((millis() - curtime) < MAX_CONSOLE_WAIT)) {
   //   neopixel_blink(1,32,0,0);
@@ -82,13 +82,20 @@ void setup(void) {
   usbDrive();
   #endif
   
+  pcf8575_ledtest();
   checkBattery();             // check condition of battery (is it connected)
+  moisture_setup();
   tmp117_setup();
   rtcc_setup();
   adc_setup();                // setup NAU7802 then switch to low power mode
   gps_setup();
   bme_setup();
   sd_setup();
+
+  //rtcc_setupInterrupt();
+  pcf8575_setidle();          
+  //zpmSetup();
+  //zpmSleepFor(5000L);         // FIXME: Needs to work w/ SD card and I2C stuff
 // FIXME: add datafile name select to start new file
   // FIXME: add header print
  
@@ -96,9 +103,12 @@ void setup(void) {
 void loop(void) {
   pcolor(0,64,0);
   delay(500);
-  pcolor(0,0,0);
-  delay(500);
-  checkBattery();
+  pcolor(0,0,64);
+  Serial.print("Moisture: ");
+  Serial.println(moisture_get());
+  delay(2000);
+  //Serial.println("I am alive!");
+  //sd_printHeader(&file);
 }
   
 // 
