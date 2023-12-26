@@ -64,13 +64,11 @@ void adc_setup() {
   for (int k = 0; k < 50; k++) {
     Serial.print(adc_getReading());
     Serial.println(" counts");
-    delay(100);
   }
   adc_heaterOn();
-  for (int k = 0; k < 60*10L; k++) {
+  for (int k = 0; k < 3600*10L; k++) {
     Serial.print(adc_getReading());
     Serial.println(" counts");
-    delay(100);
   }
   adc_heaterOff();
   adc_powerDown();
@@ -92,8 +90,8 @@ int32_t adc_getReading() {
   adc_powerUp();
   while (adcReading == 0) {
     while (!adc.available()) {
-      Serial.println("Waiting for data");
-      delay(5);
+      //Serial.println("Waiting for data");
+      delay(2);
     }
     adcReading = adc.getReading();
   }
