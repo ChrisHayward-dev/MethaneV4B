@@ -28,8 +28,8 @@ void bme_printReadings(Stream *device) {
   device->print(",");
   device->print(bme.gas_resistance / 1000.0);
   device->print(",");
-  device->print(bme.readAltitude(SEALEVELPRESSURE_HPA));
-  device->print(",");
+  //device->print(bme.readAltitude(SEALEVELPRESSURE_HPA));
+  //device->print(",");
 }
 bool bme_setup() {
   Serial.println("BME688 check");

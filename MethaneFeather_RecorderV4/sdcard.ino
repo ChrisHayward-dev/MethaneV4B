@@ -11,6 +11,22 @@ void dateTime(uint16_t* date, uint16_t* time) {
   // return time using FAT_TIME macro to format fields
   *time = FAT_TIME(now.hour(), now.minute(), now.second());
 }
+
+void sd_recordData() {
+  int32_t adcGas;
+  float   adcR;
+  file.print(rtcc.now().timestamp());file.print(",");
+  file.print(adcGas = adc_getReading());file.print(",");
+  file.print(tmp117_getTemp());file.print(",");
+  bme_printReadings(&file);
+  file.print(batteryVolts());file.print(",");
+  file.print(digitalRead(pinBatCharge));file.print(",");
+  file.print(adcR=adc_gasResistivity(adcGas));file.print(",");
+  file.print(adc_ppmGas(adcR),4);file.print(",");
+  file.print(moisture_get());file.print(",");
+  file.print("-999");file.println();
+  file.flush();
+}
 void sd_setup() {
   char fname[] = "Ssta_yymmdd_sssV4.txt";
   uint8_t yr,mo,da,hr,mn,sec;

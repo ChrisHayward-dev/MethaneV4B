@@ -14,16 +14,16 @@ bool adcHasPower = false;
 void adc_heaterOn() {
   Serial.println("Heater power on");
   delay(1);
-  pcf.digitalWrite(pinEnable5V,true);
+  pcf.digitalWrite(pinEnable5V, true);
   pcf.digitalWrite(pinHeater, true);
-  pcf.digitalWrite(pinLed2B,false);
+  pcf.digitalWrite(pinLed2B, false);
 }
 void adc_heaterOff() {
   Serial.println("Heater power off");
   delay(1);
   pcf.digitalWrite(pinHeater, false);
-  pcf.digitalWrite(pinEnable5V,false);
-  pcf.digitalWrite(pinLed2B,true);
+  pcf.digitalWrite(pinEnable5V, false);
+  pcf.digitalWrite(pinLed2B, true);
 }
 void adc_setup() {
   Serial.println("Setup NAU7802 ADC");
@@ -66,7 +66,7 @@ void adc_setup() {
     Serial.println(" counts");
   }
   adc_heaterOn();
-  for (int k = 0; k < 3600*10L; k++) {
+  for (int k = 0; k < 30 * 10L; k++) {
     Serial.print(adc_getReading());
     Serial.println(" counts");
   }
@@ -96,4 +96,34 @@ int32_t adc_getReading() {
     adcReading = adc.getReading();
   }
   return (adcReading);
+}
+
+float adc_gasResistivity(int32_t adcReading) {
+  const float R_REF = 20.0;   // Bridge reference in kOhms
+  float Vsupply = 2.4;  // has to match the setup command FIXME: need to read this from global variable and in header
+  float Vref    = 1.2;  // voltage on the reference side (measured v/ VOM) FIXME: need this in global setup header
+  float VLSB    = 0.5*Vsupply / (float)(pow(2,23));
+  float Vdiff   = adcReading * VLSB;
+  float Vgas    = Vref + Vdiff;
+  float Rgas    = Vgas * (R_REF/(Vsupply - Vgas));
+ // Serial.print("adc Counts: ");Serial.print(adcReading);
+ // Serial.print("Vsupply: ");Serial.print(Vsupply);
+ // Serial.print("; VLSB: ");Serial.print(VLSB);
+ // Serial.print("; Vdiff: ");Serial.print(Vdiff);
+ // Serial.print("; Vgas: ");Serial.print(Vgas,5);
+ // Serial.print("; Rgas: ");Serial.println(Rgas);
+  return(Rgas);
+}
+
+// Estimate the ppm of Gas -- log Rs/R0 is porportional to log ppm
+float adc_ppmGas(float gasResistivity) {  // FIXME: Need to compensate for RH and Temperatures
+  // FIXME:  We forgot to get the sensor ID#  That will need to go into the global metadata
+  const float RL_10Ref = 1.27;      // RL in kOhms for %10 LEL (5000 ppm) for a group 07 sensor
+  float Rratio = gasResistivity / RL_10Ref;   // Rratio = 1 is 5000 ppm, Rration 2 = 1000 ppm
+  float Gconstant = 1.38;
+  float Galpha    = -0.69;
+  float logPPM    = Galpha*log10(Rratio)+Gconstant;
+  float ppm       = pow(10.0,logPPM);
+  Serial.println(ppm,4);
+  return(ppm);
 }
